@@ -1,19 +1,25 @@
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Scanner;
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import java.util.TreeMap;
+
 public class Main {
+    private static NumericType numType;
+    private static int firstOperand;
+    private static int secondOperand;
     private enum OperationType {
-        Undefined,
         Addition,
-        Substraction,
+        Subtraction,
         Multiplication,
-        Divison
+        Division
     }
     private enum NumericType {
         Rome,
-        Arabic
+        Arabic,
+        Undefined
     }
+
+
     public static void main(String[] args) {
 
             // Небольшое приветствие
@@ -22,45 +28,11 @@ public class Main {
 
             // Сканируем строку и передаем в калькулятор
             Scanner scanner = new Scanner ( System.in );
-            System.out.println ( calc ( scanner.nextLine () ) );
-    }
-    /*
-    // Система счисления
-    private enum numberSystem {
-        Rome,
-        Arabic
+            do {
+                System.out.println(calc(scanner.nextLine()));
+            } while (true);
     }
 
-    private enum operationType {
-        Undefined,
-        Addition,
-        Substraction,
-        Multiplication,
-        Divison
-    }
-
-    private int firstOperand;
-    private int secondOperand;
-
-    static private operationType currentOperation;
-
-    public int getFirstOperand() {
-        return firstOperand;
-    }
-
-    public void setFirstOperand(int firstOperand) {
-        this.firstOperand = firstOperand;
-    }
-
-    public int getSecondOperand() {
-        return secondOperand;
-    }
-
-    public void setSecondOperand(int secondOperand) {
-        this.secondOperand = secondOperand;
-    }
-
-*/
     // Вычисляем результат
     public static String calc ( String input )
     {
@@ -71,58 +43,158 @@ public class Main {
 
         if ( isCorrectValue ( currentOperands ) )
         {
-            showResult( calculate ( currentOperands ,currentOperation ) );
+            return showResult ( calculate ( currentOperation ) );
         }
 
-        return input;
+        return "";
     }
 
     static OperationType getOperation ( String expression )
     {
-        return OperationType.Undefined;
+            if (symbolMatch(expression, '+') == 1 && !expression.contains("-") && !expression.contains("*") && !expression.contains("/"))
+                return OperationType.Addition;
+            if (symbolMatch(expression, '-') == 1 && !expression.contains("+") && !expression.contains("*") && !expression.contains("/"))
+                return OperationType.Subtraction;
+            if (symbolMatch(expression, '*') == 1 && !expression.contains("-") && !expression.contains("+") && !expression.contains("/"))
+                return OperationType.Multiplication;
+            if (symbolMatch(expression, '/') == 1 && !expression.contains("+") && !expression.contains("-") && !expression.contains("*"))
+                return OperationType.Division;
+        try {
+            throw new IOException();
+        } catch (IOException e) {
+            System.out.println("Строка не является математической операцией.");
+            System.exit(0);
+            throw new RuntimeException(e);
+        }
     }
 
     static String[] getOperators ( String expression , OperationType operationType )
     {
         String[] operators = { "", "" };
+        String firstOperand, secondOperand;
+        String searchSymbol = getOperatorSymbol(operationType);
+        firstOperand = expression.substring( 0 , expression.indexOf(searchSymbol) );
+        secondOperand = expression.substring( expression.lastIndexOf(searchSymbol) + 1 );
+        if ( firstOperand.trim().isEmpty() &&  secondOperand.trim().isEmpty() ) {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Строка не является математической операцией. Отсутствуют операнды.");
+                System.exit(0);
+                throw new RuntimeException(e);
+            }
+        }
+        if ( firstOperand.trim().isEmpty() ) {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Строка не является математической операцией. Отсутствует первый операнд.");
+                System.exit(0);
+                throw new RuntimeException(e);
+            }
+        }
+        if ( secondOperand.trim().isEmpty() ) {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Строка не является математической операцией. Отсутствует второй операнд.");
+                System.exit(0);
+                throw new RuntimeException(e);
+            }
+        }
+        operators[0] =  firstOperand.trim();
+        operators[1] =  secondOperand.trim();
         return operators;
     }
 
     static boolean isCorrectValue ( String[] operands )
     {
-        return true;
-    }
+        int operand;
+        NumericType ntFirstOperand = NumericType.Undefined;
+        NumericType ntSecondOperand = NumericType.Undefined;
 
-    static int calculate ( String [] operands , OperationType operationType )
-    {
-        return 0;
-    }
-
-    static void showResult ( int result )
-    {
-
-    }
-
-    /*
-    // Разбираем строку и сохраняем данные
-    static boolean tryParseExpression ( String expression )
-    {
-        currentOperation = getOperationIndex ( expression );
-        if ( currentOperation != operationType.Undefined) {
-            System.out.println("Символ найден");
-        } else {
+        for ( int i = 0 ; i < operands.length ; i++ )
+        {
             try {
-                throw new IOException();
-            } catch (IOException e) {
-                System.out.println("Вы ввели слишком много операторов!");
-                System.exit(0);
+                // Пробуем извлечь число
+                operand = Integer.parseInt(operands[i]);
+                if ( operand > 0 && operand < 11 )
+                {
+                    if ( i == 0 ) {
+                        ntFirstOperand = NumericType.Arabic;
+                        firstOperand = operand;
+                    }
+                    else {
+                        ntSecondOperand = NumericType.Arabic;
+                        secondOperand = operand;
+                    }
+                } else {
+                    System.out.println("Число слишком большое. Используйте от 1 до 10.");
+                    return false;
+                }
+
+            } catch ( Exception e )
+            {
+               try {
+                   // Пробуем извлечь римское число
+                   operand = convertFromRome ( operands[i] );
+                   if ( operand > 0 && operand < 11 )
+                   {
+                       if ( i == 0 ) {
+                           ntFirstOperand = NumericType.Rome;
+                           firstOperand = operand;
+                       }
+                       else {
+                           ntSecondOperand = NumericType.Rome;
+                           secondOperand = operand;
+                       }
+                   } else {
+                       System.out.println("Число слишком большое. Используйте от I до X.");
+                       return false;
+                   }
+               } catch (Exception ev ) {
+
+                   // Не получается извлечь даже римское число
+                   System.out.println("Введенные значения не являются числами.");
+                   System.exit(0);
+               }
             }
         }
 
-        return  true;
+        if (ntFirstOperand == ntSecondOperand && ntFirstOperand != NumericType.Undefined)
+        {
+            numType = ntFirstOperand;
+            return true;
+        } else {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Используются разные системы счисления.");
+                System.exit(0);
+            }
+        }
+        return false;
     }
 
-    // Ищем вхождения символов
+    static int calculate (  OperationType operationType )
+    {
+        if ( operationType == OperationType.Addition ) return firstOperand + secondOperand;
+        if ( operationType == OperationType.Division) return firstOperand / secondOperand;
+        if ( operationType == OperationType.Subtraction) return firstOperand - secondOperand;
+        if ( operationType == OperationType.Multiplication ) return firstOperand * secondOperand;
+        return 0;
+    }
+
+    static String showResult ( int result )
+    {
+        if (numType == NumericType.Arabic)
+        {
+            return Integer.toString(result);
+        } else {
+            return convertFromArabic( result );
+        }
+    }
+
     static int symbolMatch ( String string , char symbol )
     {
         int matches = 0;
@@ -137,27 +209,69 @@ public class Main {
         return matches;
     }
 
-    // Определяем тип операции
-    static operationType getOperationIndex ( String expression )
+    static String getOperatorSymbol ( OperationType operationType )
     {
-        if ( symbolMatch ( expression , '+') < 2 && expression.indexOf("-") == -1 && expression.indexOf("*") == -1 && expression.indexOf("/") == -1) return operationType.Addition;
-        if ( symbolMatch ( expression , '-') < 2 && expression.indexOf("+") == -1 && expression.indexOf("*") == -1 && expression.indexOf("/") == -1) return operationType.Substraction;
-        if ( symbolMatch ( expression , '*') < 2 && expression.indexOf("-") == -1 && expression.indexOf("+") == -1 && expression.indexOf("/") == -1) return operationType.Multiplication;
-        if ( symbolMatch ( expression , '/') < 2 && expression.indexOf("+") == -1 && expression.indexOf("-") == -1 && expression.indexOf("*") == -1) return operationType.Divison;
-
-        return operationType.Undefined;
+        if ( operationType == OperationType.Addition ) return "+";
+        if ( operationType == OperationType.Subtraction) return "-";
+        if ( operationType == OperationType.Multiplication ) return "*";
+        return "/";
     }
 
-
-    // Проверяем количество операндов
-    boolean isLongExpression ( )
+    static int convertFromRome ( String operand )
     {
-        return true;
+        HashMap<Character, Integer> map = new HashMap<>();
+        map.put('I' , 1);
+        map.put('V' , 5);
+        map.put('X' , 10);
+        map.put('L' , 50);
+        map.put('C' , 100);
+
+        int end = operand.length() - 1;
+        char[] arr = operand.toCharArray();
+        int arabian;
+        int result = map.get(arr[end]);
+
+        for ( int i = end-1 ; i >=0 ; i-- )
+        {
+            arabian = map.get(arr[i]);
+
+            if ( arabian < map.get(arr[i+1])) {
+                result -= arabian;
+            } else {
+                result += arabian;
+            }
+        }
+        return result;
     }
 
-    // Проверяем систему исчисления
-    numberSystem getNumberSystem ( String number )
+    static String convertFromArabic ( int operand )
     {
-        return numberSystem.Arabic;
-    }*/
+        if (operand <= 0) {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Римская система счисления не поддерживает нулевые и отрицательные значения.");
+                System.exit(0);
+            }
+        }
+        TreeMap<Integer, String> map = new TreeMap<>();
+        map.put(100 , "C");
+        map.put(90 , "XC");
+        map.put(50 , "L");
+        map.put(40 , "XL");
+        map.put(10 , "X");
+        map.put(9 , "IX");
+        map.put(5 , "V");
+        map.put(4 , "IV");
+        map.put(1 , "I");
+
+        String roman = "";
+        int arabianKey;
+        do {
+            arabianKey = map.floorKey(operand);
+            roman+= map.get(arabianKey);
+            operand -= arabianKey;
+        } while ( operand != 0 );
+        return roman;
+    }
 }
