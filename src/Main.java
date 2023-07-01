@@ -4,49 +4,51 @@ import java.util.Scanner;
 import java.util.TreeMap;
 
 public class Main {
-    private static NumericType numType;
-    private static int firstOperand;
-    private static int secondOperand;
+    private static NumericType numType;     // Текущая математическая операция
+    private static int firstOperand;        // Первый операнд
+    private static int secondOperand;       // Второй операнд
+
+    // Типы математических операций
     private enum OperationType {
         Addition,
         Subtraction,
         Multiplication,
         Division
     }
+
+    // Типы счислений
     private enum NumericType {
         Rome,
         Arabic,
         Undefined
     }
 
-
     public static void main(String[] args) {
-
-            // Небольшое приветствие
             System.out.println("----------------------------------------------------------------\n•                       Калькулятор 1.0                        •\n----------------------------------------------------------------");
             System.out.println("Введите арифметическое выражение используя числа от 0 до 10 \nарабскими или римскими цифрами и нажмите Enter: ");
 
-            // Сканируем строку и передаем в калькулятор
             Scanner scanner = new Scanner ( System.in );
             do {
                 System.out.println(calc(scanner.nextLine()));
             } while (true);
     }
 
-    // Вычисляем результат
     public static String calc ( String input )
     {
+        // Получаем операнды и операторы
         OperationType currentOperation;
         String[] currentOperands;
         currentOperation = getOperation(input);
         currentOperands = getOperators(input, currentOperation);
 
+        // Проверяем корректны ли значения
         if ( isCorrectValue ( currentOperands ) )
         {
+            // Рассчитываем и отображаем результат
             return showResult ( calculate ( currentOperation ) );
+        } else {
+            return "";
         }
-
-        return "";
     }
 
     static OperationType getOperation ( String expression )
@@ -59,9 +61,12 @@ public class Main {
                 return OperationType.Multiplication;
             if (symbolMatch(expression, '/') == 1 && !expression.contains("+") && !expression.contains("-") && !expression.contains("*"))
                 return OperationType.Division;
-        try {
+        try
+        {
             throw new IOException();
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             System.out.println("Строка не является математической операцией.");
             System.exit(0);
             throw new RuntimeException(e);
@@ -195,6 +200,7 @@ public class Main {
         }
     }
 
+    // Подсчет символов
     static int symbolMatch ( String string , char symbol )
     {
         int matches = 0;
@@ -209,6 +215,7 @@ public class Main {
         return matches;
     }
 
+    // Получение символа по текущему типу операции
     static String getOperatorSymbol ( OperationType operationType )
     {
         if ( operationType == OperationType.Addition ) return "+";
@@ -217,6 +224,7 @@ public class Main {
         return "/";
     }
 
+    // Конвертирование из Римских цифр
     static int convertFromRome ( String operand )
     {
         HashMap<Character, Integer> map = new HashMap<>();
@@ -244,6 +252,7 @@ public class Main {
         return result;
     }
 
+    // Конвертирование из арабских цифр
     static String convertFromArabic ( int operand )
     {
         if (operand <= 0) {
